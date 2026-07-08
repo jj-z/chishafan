@@ -1,0 +1,8 @@
+{
+  "name": "@chisha/web-nuxt",
+  "private": true,
+  "dependencies": {
+    "@chisha/core": "workspace:*",
+    "nuxt": "^3.11.0"
+  }
+}

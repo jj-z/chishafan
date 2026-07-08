@@ -1,0 +1,7 @@
+# chisha/pnpm-workspace.yaml
+packages:
+  - 'packages/*'
+  - 'server'
+allowBuilds:
+  esbuild: false
+  vue-demi: false

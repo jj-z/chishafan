@@ -1,0 +1,9 @@
+{
+  "name": "@chisha/miniapp-uniapp",
+  "private": true,
+  "dependencies": {
+    "@chisha/core": "workspace:*",
+    
+    "pinia": "^2.1.7"
+  }
+}
