@@ -3,6 +3,9 @@ import { createPinia } from 'pinia'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 
+import Vant from 'vant'
+import 'vant/lib/index.css'   // 引入全部样式
+
 // 导入你的页面（稍后创建）
 import HomeView from './views/HomeView.vue'
 
@@ -16,4 +19,5 @@ const router = createRouter({
 const app = createApp(App)
 app.use(createPinia())
 app.use(router)
+app.use(Vant)
 app.mount('#app')

@@ -3,5 +3,9 @@ packages:
   - 'packages/*'
   - 'server'
 allowBuilds:
+  '@parcel/watcher': set this to true or false
+  '@prisma/client': set this to true or false
+  '@prisma/engines': set this to true or false
   esbuild: false
+  prisma: set this to true or false
   vue-demi: false
