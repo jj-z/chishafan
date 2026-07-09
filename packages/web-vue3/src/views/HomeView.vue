@@ -3,8 +3,10 @@
         <h1>Welcome to the Home Page</h1>
         <p>This is the main content of the home page.</p>
     </div>
+    <tab-bar />
 </template>
 <script setup lang="ts">
+import TabBar from '@/components/TabBar.vue';
 </script>
 <style scoped lang="scss">
  .home{

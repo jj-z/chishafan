@@ -81,6 +81,9 @@ importers:
 
   packages/web-vue3:
     dependencies:
+      '@chisha/core':
+        specifier: workspace:*
+        version: link:../core
       '@chisha/mock':
         specifier: workspace:*
         version: link:../mock

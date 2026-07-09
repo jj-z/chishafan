@@ -24,13 +24,21 @@
 
 chisha/
 ├── packages/
-│   ├── core/            # 共享核心
-│   ├── web-vue3/        # Vue 3 SPA 版
-│   ├── web-nuxt/        # Nuxt 3 SSR 版
-│   └── miniapp-uniapp/  # uni-app 多端版
-├── server/              # Express API
-├── pnpm-workspace.yaml
-└── README.md
+│   ├── core/            # 共享核心逻辑：公共类型、组合式函数、API 规范
+│   ├── mock/            # Mock 数据与接口，实现前端独立开发
+│   ├── web-vue3/        # Vue 3 SPA 版，Vite + TypeScript + Vant
+│   │   ├── public/      # 静态资源
+│   │   ├── src/         # 源代码入口
+│   │   ├── tsconfig.*   # TypeScript 配置
+│   │   └── vite.config.ts
+│   ├── web-nuxt/        # Nuxt 3 SSR 版，服务端渲染与静态页面
+│   └── miniapp-uniapp/  # uni-app 小程序 / App 多端版
+├── server/              # Express API 服务端
+├── docs/                # 项目文档：需求、设计、作品集说明
+├── pnpm-workspace.yaml  # pnpm workspace 配置
+├── package.json         # 根脚本与依赖管理
+├── eslint.config.js     # 统一 ESLint 配置
+└── README.md            # 项目说明文档
 
 
 ### 技术栈详解
