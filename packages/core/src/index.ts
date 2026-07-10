@@ -7,7 +7,7 @@
 // ---------- 类型定义 ----------
 export type * from './types'           // 导出所有 type（Dish, MealTime, Cuisine 等）
 export type * from './types/api'       // 请求/响应通用类型（如 ApiResponse<T>）
-export * from './types/tabbar';        // 导出 TabBarItem 类型定义
+export type * from './types/tabbar';        // 导出 TabBarItem 类型定义
 export * from './constants/tabbar';    // 导出 TabBar 配置常量（CORE_TAB_BAR_CONFIG）
 
 // ---------- 组合式函数（Composables） ----------
