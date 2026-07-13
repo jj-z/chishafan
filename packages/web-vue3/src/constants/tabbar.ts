@@ -1,6 +1,4 @@
-import { CORE_TAB_BAR_CONFIG, type TabBarItem } from '@chisha/core';
-import type { TabbarItem as VantTabbarItem } from 'vant'; // 伪代码示意
-
+import { CORE_TAB_BAR_CONFIG} from '@chisha/core';
 // 映射 Vant 图标：由 core 的 key 决定使用哪个 Vant 图标
 const VANT_ICON_MAP: Record<string, string> = {
   home: 'wap-home',

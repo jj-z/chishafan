@@ -1,5 +1,5 @@
 import type { ApiResponse, Dish, MealTime } from '@chisha/core'
-import { mockDishes } from '../data/dishes'
+import { dishes } from '../data/dishes'
 
 function delay(ms = 200): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -10,7 +10,7 @@ function delay(ms = 200): Promise<void> {
  */
 export async function fetchRandomDish(mealTime?: MealTime): Promise<ApiResponse<Dish>> {
   await delay()
-  let pool = mockDishes
+  let pool = dishes
   if (mealTime) {
     pool = pool.filter(d => d.mealTime === mealTime)
   }
