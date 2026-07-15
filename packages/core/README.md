@@ -71,22 +71,27 @@ function createApiClient(requestFn) {
 - 在 `web-vue3` 中实际引入，验证类型和逻辑复用是否正常
 - 后续逐步迁移更多纯逻辑 `composable` 和 `store` 至此包
 
-## 五、目录结构参考
+## 五、目录结构参考（仅限 `core`）
+
+实际 `src` 目录包含 4 个子目录（以下内容已与代码目录对齐）：
 
 ```text
 core/
-├── src/
-│   ├── index.ts            # 统一导出
-│   ├── types/
-│   │   ├── index.ts        # Dish, User, Category 等
-│   │   └── api.ts          # 请求/响应通用类型
-│   ├── composables/        # 纯逻辑 composables
-│   ├── stores/             # 共享 Pinia stores
-│   ├── utils/              # 纯工具函数
-│   └── api/                # API 客户端工厂与接口定义
-├── package.json
-└── README.md
+├── package.json            # 包元信息与对外导出
+├── README.md               # 本说明（维护规范/约束）
+└── src/
+  ├── composables/       # 无平台依赖的组合式函数（useRandomDish 等）
+  ├── constants/         # 常量与枚举（MEAL_TIMES、标签等）
+  ├── stores/            # Pinia store（平台可用的抽象状态）
+  ├── types/             # 业务实体类型（Dish, User, Category...）
+  └── index.ts           # 统一对外导出（entry）
 ```
+
+建议约定：
+- `types`：仅放类型定义，避免引入运行时代码；字段变更需同步至引用处。
+- `composables`：仅包含纯逻辑（可使用 Vue 的响应式 API），不得直接访问浏览器或平台全局对象。
+- `constants`：集中管理业务常量/枚举，便于多端共享。
+- `stores`：放置 Pinia store，实现状态抽象并保持与平台层解耦。
 
 本文件为 `@chisha/core` 的维护规范，随项目进化持续更新。
 

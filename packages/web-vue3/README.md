@@ -1,5 +1,7 @@
-# Vue 3 + TypeScript + Vite
+# packages/web-vue3
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+> 本包为基于 Vue 3 + Vite 的 SPA 实现，负责单页应用的前端视图与交互逻辑（使用 TypeScript）。
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+快速说明：本目录为前端 SPA 的代码入口，开发时使用 `pnpm dev:vue3` 启动。保持与 `@chisha/core` 的类型同步以避免运行时错误。
+
+更多信息请参考 Vue 官方文档与项目内部的代码注释。

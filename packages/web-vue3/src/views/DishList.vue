@@ -1,12 +1,20 @@
 <template>
     <div class="dish-page">
-        <h1>Welcome to the dish Page</h1>
-        <p>This is the main content of the dish page.</p>
+        <van-search v-model="searchKeyword" placeholder="请输入搜索关键词" />
+        <dish-card v-for="dish in dishes" :key="dish.id" :dish="dish"  @click="onDishClick" />
     </div>
     <tab-bar />
 </template>
 <script setup lang="ts">
 import TabBar from '@/components/TabBar.vue';
+import DishCard from '@/components/DishCard.vue';
+import { dishes } from '@chisha/mock';
+import { ref } from 'vue';
+const searchKeyword = ref<string>('');
+const onDishClick = (dish: any) => {
+    console.log('点击了菜品:', dish.name);
+}
+
 </script>
 <style scoped lang="scss">
  .dish{

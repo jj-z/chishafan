@@ -4,5 +4,7 @@ import App from './App.vue'
 import router from './router'
 import Vant from 'vant'
 import 'vant/lib/index.css'
+import { createPinia } from 'pinia'
+const pinia = createPinia()
 
-createApp(App).use(router).use(Vant).mount('#app')
+createApp(App).use(pinia).use(router).use(Vant).mount('#app')

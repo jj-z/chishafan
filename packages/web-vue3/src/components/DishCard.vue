@@ -153,6 +153,7 @@ const handleBlacklistClick = async (event: Event) => {
   background: #fff;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   transition: transform 0.2s, box-shadow 0.2s;
+  margin-bottom: 20px;
 
   &:hover {
     transform: translateY(-4px);

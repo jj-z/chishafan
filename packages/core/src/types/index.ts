@@ -113,13 +113,4 @@ export interface Dish {
    * @example [MealScene.FAMILY, MealScene.PARTY]
    */
   scene?: MealScene[]
-
-  /**
-   * 食品份数（标准份量）
-   * 默认为 1，表示一份的标准量。
-   * 在实际点餐或计算营养时，可乘以该份数。
-   * @default 1
-   * @example 2（表示双人份）
-   */
-  servings?: number
 }

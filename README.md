@@ -75,3 +75,17 @@ pnpm dev:server
 # 5. 启动 Nuxt SSR 版（阶段三）
 pnpm dev:web
 
+---
+
+**项目目录说明（简要）**
+
+- `packages/core`：共享核心包，放置纯逻辑、类型、可复用 composable、以及平台无关的 API 客户端工厂。
+- `packages/mock`：本地 mock 服务与示例数据，用于前端在无真实后端时的独立开发与集成测试。
+- `packages/web-vue3`：基于 Vue 3 + TS 的 SPA 实现，适合单页应用部署场景。
+- `packages/web-nuxt`：基于 Nuxt 3 的 SSR 实现，用于 SEO 与首屏性能优化。
+- `packages/miniapp-uniapp`：使用 uni-app 实现的小程序及原生打包目标（多端兼容）。
+- `server`：后端代码（Express + TypeScript），包含路由、中间件、Prisma 数据模型与迁移脚本。
+- `docs`：项目的需求、设计与作品集说明，作为项目知识库和简历素材来源。
+
+若需贡献：请先阅读 [packages/core/README.md](packages/core/README.md#L1) 以了解核心包的约束与设计原则。
+

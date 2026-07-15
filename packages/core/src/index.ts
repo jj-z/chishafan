@@ -17,6 +17,7 @@ export { useRandomDish } from './composables/useRandomDish'
 // ---------- Pinia 状态管理 ----------
 // 当有共享 store 时取消注释并导出
 // export { useUserStore } from './stores/user'
+export { useKeepaliveStore } from './stores/useKeepaliveStore'
 
 // ---------- 工具函数 ----------
 // export { formatCalories, getMealTimeLabel } from './utils/format'
