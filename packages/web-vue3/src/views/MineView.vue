@@ -6,6 +6,7 @@
     <tab-bar />
 </template>
 <script setup lang="ts">
+defineOptions({ name: 'mine' })
 import TabBar from '@/components/TabBar.vue';
 </script>
 <style scoped lang="scss">

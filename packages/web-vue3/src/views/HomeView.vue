@@ -16,6 +16,7 @@
     <tab-bar />
 </template>
 <script setup lang="ts">
+defineOptions({ name: 'home' })
 import TabBar from '@/components/TabBar.vue';
 import DishCard from '@/components/DishCard.vue';
 import { ref, onMounted, nextTick } from 'vue';
