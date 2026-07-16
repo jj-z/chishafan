@@ -13,7 +13,6 @@ export type Difficulty = '简单' | '中等' | '困难'
 // 用餐人数场景
 export type MealScene = '单人' | '家庭' | '老人' | '儿童' | '聚餐' | '节日' | '工作简餐' | '宴请' | '其他'
 
-// 核心菜品接口
 /**
  * 核心菜品接口
  * 用于描述系统中的一道完整菜品信息
@@ -113,4 +112,112 @@ export interface Dish {
    * @example [MealScene.FAMILY, MealScene.PARTY]
    */
   scene?: MealScene[]
+
+  /**
+   * 适用人数（可选）
+   * @example 1
+   */
+  servings?: number
+}
+
+/**
+ * 用户  
+ * 收集用户信息  包括用户手机号微信支付宝或者其他平台关联信息  
+ * 以及用户的偏好口味和收藏菜品等
+ */
+
+export interface User {
+  /**
+   * 用户唯一标识符
+   * @example 'user_001'
+   */
+  id: string
+  /**
+   * 用户昵称
+   * @example '小明'
+   */
+  nickname: string
+
+  /**
+   * 用户头像（可选）
+   * @example 'https://example.com/avatar.png'
+   */
+  avatar?: string
+
+  /**
+   * 用户性别（可选）
+   * @example 'male'
+   */
+  gender?: 'male' | 'female' | 'unknown'
+
+  /**
+   * 用户城市（可选）
+   * @example '北京'
+   */
+  city?: string
+
+  /**
+   * 用户简介（可选）
+   * @example '热爱美食，喜欢尝试新菜'
+   */
+  bio?: string
+
+  /**
+   * 用户手机号（可选）
+   * @example '13800138000'
+   */
+  phone?: string
+
+  /**
+   * 用户微信号（可选）
+   * @example 'wxid_1234567890'
+   */
+  wechatId?: string
+
+  /**
+   * 用户支付宝账号（可选）
+   * @example 'alipay_1234567890'
+   */
+  alipayId?: string
+
+  /**
+   * 用户偏好口味（可选，可多选）
+   * 建议使用枚举类型 Taste[] 定义可选值
+   * @example [Taste.SPICY, Taste.SWEET]
+   */
+  preferredTastes?: Taste[]
+
+
+  /**
+   * 用户创建时间（可选）
+   * @example new Date('2024-01-01T12:00:00Z')
+   */
+  createdAt?: Date
+
+  /**
+   * 用户最后一次更新时间（可选）
+   * @example new Date('2024-01-15T18:30:00Z')
+   */
+  updatedAt?: Date
+
+  //应该在接口返回这两个字段，但是不和user绑定
+  // /**
+  //  * 用户收藏的菜品 ID 列表（可选）
+  //  * @example ['dish_001', 'dish_002']
+  //  */
+  // favoriteDishes?: string[]
+  
+  // /**
+  //  * 用户拉黑的菜品 ID 列表（可选）
+  //  * @example ['dish_001', 'dish_002']
+  //  */
+  // blacklistedDishes?: string[]
+
+}
+
+// 只定义基础字段，不包含任何 UI 框架的 icon 字段
+export interface TabBarItem {
+  key: string;      // 唯一标识，如 'home'
+  path: string;     // 路由路径
+  label: string;    // 显示文案
 }

@@ -20,7 +20,7 @@ const onDishClick = (dish: any) => {
 <style scoped lang="scss">
  .dish{
     &-page{
-        padding: 20px;
+        padding: 20px 20px 80px;
         h1{
             font-size: 24px;
             color: #333;

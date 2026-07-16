@@ -1,4 +1,4 @@
-import type { TabBarItem } from '../types/tabbar';
+import type { TabBarItem } from '../types';
 
 export const CORE_TAB_BAR_CONFIG: TabBarItem[] = [
   { key: 'home', path: '/', label: '今日推荐' },

@@ -7,7 +7,6 @@
 // ---------- 类型定义 ----------
 export type * from './types'           // 导出所有 type（Dish, MealTime, Cuisine 等）
 export type * from './types/api'       // 请求/响应通用类型（如 ApiResponse<T>）
-export type * from './types/tabbar';        // 导出 TabBarItem 类型定义
 export * from './constants/tabbar';    // 导出 TabBar 配置常量（CORE_TAB_BAR_CONFIG）
 
 // ---------- 组合式函数（Composables） ----------
@@ -15,8 +14,7 @@ export { useRandomDish } from './composables/useRandomDish'
 // 未来新增 composable 时，在此追加一行 export
 
 // ---------- Pinia 状态管理 ----------
-// 当有共享 store 时取消注释并导出
-// export { useUserStore } from './stores/user'
+export { useUserStore } from './stores/useUserStore'
 export { useKeepaliveStore } from './stores/useKeepaliveStore'
 
 // ---------- 工具函数 ----------

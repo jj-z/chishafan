@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { showConfirmDialog } from 'vant' // Vant 的确认弹窗
+import { computed, ref, watch } from 'vue'
 import type { Dish } from '@chisha/core'
 
 // 组件名（便于调试）
@@ -10,29 +9,30 @@ defineOptions({ name: 'DishCard' })
 const props = withDefaults(
   defineProps<{
     dish: Dish
-    showCollect?: boolean    // 是否显示收藏按钮
+    showFavorite?: boolean    // 是否显示收藏按钮
     showBlacklist?: boolean  // 是否显示拉黑按钮
-    isCollected?: boolean    // 是否已收藏（由父组件控制）
+    isFavorite?: boolean    // 是否已收藏（由父组件控制）
+    isBlacklisted?: boolean   // 是否已拉黑（由父组件控制）
   }>(),
   {
-    showCollect: true,
+    showFavorite: true,
     showBlacklist: true,
-    isCollected: false,
+    isFavorite: false,
+    isBlacklisted: false
   }
 )
 
-// 本地收藏状态（可与父组件双向绑定，此处演示内部状态）
-const isCollected = ref(props.isCollected)
-
 const emit = defineEmits<{
   (e: 'click', dish: Dish): void                          // 卡片点击
-  (e: 'collect', dish: Dish): void                        // 收藏/取消收藏
+  (e: 'favorite', dish: Dish): void                        // 收藏/取消收藏
   (e: 'blacklist', dish: Dish): void                      // 拉黑
 }>()
 
 // ---------- 数据处理 ----------
 // 解构 dish 方便模板使用
 const { dish } = props
+
+console.log('DishCard props:', props.isFavorite, props.isBlacklisted, dish.id )
 
 // 口味标签展示（限制数量）
 const tasteDisplay = computed(() => {
@@ -58,38 +58,21 @@ const handleCardClick = () => {
 }
 
 // 收藏切换
-const handleCollectClick = (event: Event) => {
+const handleFavoriteClick = (event: Event) => {
   event.stopPropagation()
-  isCollected.value = !isCollected.value
-  emit('collect', dish)
+  emit('favorite', dish)
 }
 
 // 拉黑（带二次确认）
 const handleBlacklistClick = async (event: Event) => {
   event.stopPropagation()
-  try {
-    await showConfirmDialog({
-      title: '确认拉黑',
-      message: `确定要将「${dish.name}」加入黑名单吗？\n之后将不再推荐该菜品。`,
-      confirmButtonText: '确认拉黑',
-      confirmButtonColor: '#ee0a24',
-    })
-    emit('blacklist', dish)
-  } catch {
-    // 用户取消，不做任何操作
-  }
+  emit('blacklist', dish)
 }
 </script>
 
 <template>
   <div class="dish-card" @click="handleCardClick">
-    <van-card
-      :num="safeServings"
-      :desc="safeDescription"
-      :title="dish.name"
-      :thumb="safeImage"
-      thumb-fit="cover"
-    >
+    <van-card :num="safeServings" :desc="safeDescription" :title="dish.name" :thumb="safeImage" thumb-fit="cover">
       <!-- 价格 + 卡路里组合展示 -->
       <template #price>
         <div class="price-wrapper">
@@ -109,7 +92,7 @@ const handleBlacklistClick = async (event: Event) => {
           </van-tag>
           <!-- 可选的难度标签 -->
           <van-tag v-if="dish.difficulty" plain type="warning" size="medium">
-            {{dish.difficulty}}
+            {{ dish.difficulty }}
           </van-tag>
         </div>
       </template>
@@ -118,25 +101,14 @@ const handleBlacklistClick = async (event: Event) => {
       <template #footer>
         <div class="footer-actions">
           <!-- 收藏按钮：有状态切换 -->
-          <van-button
-            v-if="showCollect"
-            size="mini"
-            :type="isCollected ? 'primary' : 'default'"
-            :icon="isCollected ? 'like' : 'like-o'"
-            @click.stop="handleCollectClick"
-          >
-            {{ isCollected ? '已收藏' : '收藏' }}
+          <van-button v-if="showFavorite" size="mini" :type="isFavorite ? 'primary' : 'default'"
+            :icon="isFavorite ? 'like' : 'like-o'" @click.stop="handleFavoriteClick">
+            {{ isFavorite ? '已收藏' : '收藏' }}
           </van-button>
 
           <!-- 拉黑按钮：危险操作 -->
-          <van-button
-            v-if="showBlacklist"
-            size="mini"
-            type="danger"
-            plain
-            icon="cross"
-            @click.stop="handleBlacklistClick"
-          >
+          <van-button v-if="showBlacklist" size="mini" :type="isBlacklisted ? 'danger' : 'default'" plain
+            :icon="isBlacklisted ? 'cross' : 'minus'" @click.stop="handleBlacklistClick">
             拉黑
           </van-button>
         </div>
@@ -200,6 +172,7 @@ const handleBlacklistClick = async (event: Event) => {
       font-weight: 700;
       color: #f56c6c;
     }
+
     .calories {
       font-size: 13px;
       color: #999;
