@@ -29,6 +29,8 @@ export const mockUserProfile: MockUserProfile = {
     dishes[8].id
   ],
   blacklistDishIds: [
+    dishes[0].id,
+    dishes[2].id,
     dishes[3].id,
     dishes[11].id,
     dishes[14].id

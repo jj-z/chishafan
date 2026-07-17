@@ -35,6 +35,9 @@ const isPicking = ref(false)
 const {isFavorite, isBlacklisted, toggleBlacklistId, toggleFavoriteId,setBlacklistIds,setFavoriteIds} = useUserStore();
 /**初始化store数据 
  * 收藏和拉黑数据从mockUserProfile中获取，模拟用户数据
+ * 此处用了计算属性来控制收藏和拉黑状态，避免直接修改store数据，其他组件将改为可以通过store来获取状态
+ * 后续使用真实用户数据时，可以通过接口获取用户的收藏和拉黑数据，然后初始化store
+ * 使用真实的食物数据时，会把dishes存到store中，后续的收藏和拉黑操作也会直接修改store中的数据
 */
 
 setBlacklistIds(mockUserProfile.blacklistDishIds);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed} from 'vue'
 import type { Dish } from '@chisha/core'
 
 // 组件名（便于调试）
@@ -108,8 +108,8 @@ const handleBlacklistClick = async (event: Event) => {
 
           <!-- 拉黑按钮：危险操作 -->
           <van-button v-if="showBlacklist" size="mini" :type="isBlacklisted ? 'danger' : 'default'" plain
-            :icon="isBlacklisted ? 'cross' : 'minus'" @click.stop="handleBlacklistClick">
-            拉黑
+            :icon="isBlacklisted ? 'closed-eye' : 'eye-o'" @click.stop="handleBlacklistClick">
+            {{ isBlacklisted ? '已拉黑' : '拉黑' }}
           </van-button>
         </div>
       </template>
