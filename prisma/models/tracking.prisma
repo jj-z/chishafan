@@ -1,0 +1,34 @@
+// 推荐效果埋点（P2-09 / TRACK-01~04）。
+// 只记录推荐链路上的行为事实，不存 IP/UA 等额外信息；作为日志保留，不做业务侧删除。
+enum RecommendEventType {
+  IMPRESSION
+  CLICK
+  DINE
+}
+
+// 推荐来源：首页随机一餐 / AI 聊天推荐。
+enum RecommendSource {
+  RANDOM
+  AI
+}
+
+model RecommendEvent {
+  id        String              @id @default(cuid())
+  // 前端生成的全局唯一 id：批量上报重试时靠它去重，避免同一曝光被重复计数。
+  eventId   String              @unique
+  // 游客也能上报，因此允许为空；登录用户注销后历史事件仍保留（软删除不级联）。
+  userId    String?
+  dishId    String
+  type      RecommendEventType
+  source    RecommendSource
+  createdAt DateTime            @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dish Dish  @relation(fields: [dishId], references: [id], onDelete: Cascade)
+
+  // 转化率按「类型 + 时间」聚合；热门菜按「菜品 + 类型」聚合；个人行为按「用户 + 时间」。
+  @@index([type, createdAt])
+  @@index([dishId, type, createdAt])
+  @@index([userId, createdAt])
+  @@map("recommend_events")
+}

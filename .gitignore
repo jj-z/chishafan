@@ -1,0 +1,33 @@
+# Nuxt dev/build outputs
+.output
+.data
+.nuxt
+.nitro
+.cache
+dist
+
+# Node dependencies
+node_modules
+
+# Logs
+logs
+*.log
+
+# Misc
+.DS_Store
+.fleet
+.idea
+
+# Local env files
+.env
+.env.*
+!.env.example
+
+# Prisma 生成的客户端（由 prisma generate 产出，不要提交）
+/shared/generated
+/prisma/generated
+
+# 本地数据库备份、覆盖率与 lint 缓存
+/backups
+/coverage
+.eslintcache

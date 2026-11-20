@@ -1,0 +1,16 @@
+# 构建阶段不需要、也不应该进入镜像的内容
+node_modules
+.nuxt
+.output
+.data
+.git
+.github
+.vscode
+.screenshots
+docs
+tests
+*.md
+.env
+.env.*
+!.env.example
+coverage

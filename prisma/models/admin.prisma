@@ -1,0 +1,42 @@
+// 后台操作审计（P2-11 / ADMIN-02，P2-13 泛化为「谁对什么做了什么」）。
+// detail 存变更后的值；禁止写入密码明文或哈希。
+
+enum AdminAuditAction {
+  DISABLE_USER
+  ENABLE_USER
+  CHANGE_ROLE
+  RESET_PASSWORD
+  CREATE_DISH
+  UPDATE_DISH
+  DELETE_DISH
+  CREATE_CATEGORY
+  UPDATE_CATEGORY
+  DELETE_CATEGORY
+}
+
+// 被操作对象的类型。审计表不建多态外键（数据库无法表达「可能是用户也可能是菜品」），
+// 因此目标 id 只做逻辑引用：目标被物理删除后审计记录仍保留，这正是追责需要的行为。
+enum AdminAuditTargetType {
+  USER
+  DISH
+  CATEGORY
+}
+
+model AdminAuditLog {
+  id         String              @id @default(cuid())
+  // 执行操作的管理员；管理员被物理删除时级联清理（业务上只做软删除）。
+  adminId    String
+  action     AdminAuditAction
+  targetType AdminAuditTargetType @default(USER)
+  targetId   String
+  // 变更后的值（如新角色、启用/禁用、菜名），不存敏感数据。
+  detail     String?
+  createdAt  DateTime            @default(now())
+
+  admin User @relation("AdminAuditLogs", fields: [adminId], references: [id], onDelete: Cascade)
+
+  // 查询场景：某类目标的操作历史、某个管理员的操作历史。
+  @@index([targetType, targetId, createdAt])
+  @@index([adminId, createdAt])
+  @@map("admin_audit_logs")
+}

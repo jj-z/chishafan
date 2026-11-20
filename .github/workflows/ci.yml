@@ -1,0 +1,73 @@
+# CI（P2-18）：install → prisma migrate/seed → lint → format check → typecheck → test → e2e → build
+# 所有命令直接复用 package.json 脚本，禁止在流水线里另写一套等价命令。
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: chishafan
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d chishafan"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/chishafan?schema=public
+      # CI 专用固定值，不是生产密钥；长度必须 ≥ 32（AUTH-06）
+      NUXT_APP_SECRET: ci-only-secret-value-32-characters-long
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 执行数据库迁移
+        run: npx prisma migrate deploy
+
+      - name: 写入种子数据
+        run: npm run db:seed
+
+      - name: Lint
+        run: npm run lint
+
+      - name: 格式检查
+        run: npm run format:check
+
+      - name: 类型检查
+        run: npm run typecheck
+
+      - name: 单元测试
+        run: npm test
+
+      - name: 接口集成测试
+        run: npm run test:e2e
+
+      - name: 生产构建
+        run: npm run build

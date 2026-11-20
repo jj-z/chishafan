@@ -1,0 +1,17 @@
+// 收藏。@@unique 是 FAV-01/FAV-03 的数据库级兜底，
+// 应用层的“查一下再插入”在并发下会产生重复记录，唯一索引能直接拦住。
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  dishId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dish Dish @relation(fields: [dishId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dishId])
+  @@index([userId])
+  // 按菜品统计收藏数（后台/推荐权重）走 dishId，只有 userId 索引会退化成全表扫描（P2-20）。
+  @@index([dishId])
+  @@map("favorites")
+}

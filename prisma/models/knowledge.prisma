@@ -1,0 +1,72 @@
+// 知识库向量索引（pgvector）与 AI 用量记账（D1）。
+//
+// 为什么知识片段单独建表，而不是给 Dish 加一列：
+// 1. 一道菜可能拆成多个片段（简介 / 做法），一列装不下；
+// 2. 后台改菜后只需重建受影响的片段；
+// 3. vector 列只能用 Unsupported 声明，Prisma 不生成该字段的类型，
+//    独立表能把「向量读写必须走 raw SQL」这个限制收敛在一处。
+
+// 知识来源：目前只有菜品；FAQ 作为预留，避免以后加表迁移。
+enum KnowledgeSourceType {
+  DISH
+  FAQ
+}
+
+model KnowledgeChunk {
+  id         String              @id @default(cuid())
+  sourceType KnowledgeSourceType @default(DISH)
+  // 逻辑引用菜品 id，不建外键：菜品软删除后片段仍可保留（检索时再按 deletedAt 过滤），
+  // 与 AdminAuditLog 的多态引用思路一致，物理删除时由同步逻辑清理。
+  sourceId   String
+  // 片段正文：会拼进 prompt，只放业务事实（菜名/菜系/食材/做法），禁止放内部 id。
+  content    String
+  // 内容哈希：内容没变就不重新调用 embedding，节省调用成本；同步时用它跳过无变化的片段。
+  contentHash String
+  // pgvector 列。Prisma 不支持 vector 类型，读写都必须走 $queryRaw / $executeRaw。
+  // 维度在建表时定死（1024），换 embedding 模型需要重建整张表。
+  embedding  Unsupported("vector(1024)")?
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  // 同步与删除都按「来源 + 来源 id」定位，复合索引直接命中。
+  @@index([sourceType, sourceId])
+  @@map("knowledge_chunks")
+}
+
+// AI token 用量按「主体 + 自然日」聚合（R3）。
+// 为什么落库而不是像限流那样放内存：额度用完必须重启后仍然生效，且多实例要算同一份账。
+model AiUsageDaily {
+  id String @id @default(cuid())
+  // user:<id>（登录用户）或 ip:<ip>（游客）。
+  subjectKey String
+  // 服务器本地时区的自然日 YYYY-MM-DD：跨天 key 变化即自动从 0 计数（与 rateLimit 一致）。
+  day        String
+
+  promptTokens     Int @default(0)
+  completionTokens Int @default(0)
+  // 请求次数单独记：按次数防刷与按 token 控成本是两套口径，不能互相替代。
+  requests         Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([subjectKey, day])
+  @@index([day])
+  @@map("ai_usage_daily")
+}
+
+// 检索未命中日志（R2 的可观测性）：只记问题与最高相似度，不记用户输入以外的隐私。
+// 看板据此发现「知识库该补什么」，也用于校准相似度阈值。
+model RagMissLog {
+  id       String   @id @default(cuid())
+  query    String
+  // 本轮最高余弦相似度（0~1）。持续偏低说明阈值合理、确实没这个知识；
+  // 接近阈值说明该调低阈值，而不是盲目补数据。
+  topScore Float
+  // 逻辑引用用户，不建外键：游客为空，账号注销后日志仍可用于统计。
+  userId   String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("rag_miss_logs")
+}

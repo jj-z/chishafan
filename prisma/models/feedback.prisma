@@ -1,0 +1,27 @@
+// 用户对菜品的偏好反馈（P2-08 / PREF-11 / PREF-12）。
+// DISLIKE = 不感兴趣，7 天内硬排除；LIKE = 喜欢，只在推荐时软加权（×1.5），不硬推。
+// 唯一键里带 action，因此同一道菜可以同时存在 LIKE 与 DISLIKE 两条记录，
+// 由业务层在切换反馈时删除另一种动作，避免语义冲突。
+enum DishFeedbackAction {
+  DISLIKE
+  LIKE
+}
+
+// 「不感兴趣」在 7 天内硬排除该菜（PREF-11）。
+// 撤销即硬删除（DATA-02 同 Favorite）：反馈不是审计日志，没有保留必要。
+model DishFeedback {
+  id        String             @id @default(cuid())
+  userId    String
+  dishId    String
+  action    DishFeedbackAction @default(DISLIKE)
+  // 7 天窗口从这个时间起算；重复标记同一道菜时刷新为当前时间。
+  createdAt DateTime           @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dish Dish @relation(fields: [dishId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dishId, action])
+  // 推荐查询按「用户 + 动作 + 时间窗口」过滤，复合索引直接命中。
+  @@index([userId, action, createdAt])
+  @@map("dish_feedbacks")
+}

@@ -1,0 +1,88 @@
+# 本地/单机部署编排（P2-18）。
+# 启动顺序：db 健康 → migrate 一次性执行完 → app 启动。
+# 首次启动后如需演示数据：docker compose run --rm seed
+#
+# 注意：默认密码仅用于本地演示；生产请通过环境变量覆盖 POSTGRES_PASSWORD 与 NUXT_APP_SECRET。
+
+services:
+  db:
+    # 必须使用带 pgvector 的镜像：AI 问答的知识库索引依赖 vector 扩展，
+    # 官方 postgres 镜像不含该扩展，迁移会在 CREATE EXTENSION 处失败。
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-chishafan}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      # 只给本机 `npm run dev` 用；容器内的 app/migrate 仍走 db:5432。
+      # 5433 已被其它项目占用，这里用 5434。
+      - '5434:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-chishafan}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    build:
+      context: .
+      target: migrator
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@db:5432/chishafan?schema=public}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: 'no'
+
+  seed:
+    build:
+      context: .
+      target: migrator
+    command: ['npm', 'run', 'db:seed']
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@db:5432/chishafan?schema=public}
+      NUXT_APP_SECRET: ${NUXT_APP_SECRET:-local-dev-secret-at-least-32-characters}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    profiles: ['tools']
+
+  app:
+    build:
+      context: .
+      target: runner
+    restart: unless-stopped
+    ports:
+      - '${PORT:-3000}:3000'
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@db:5432/chishafan?schema=public}
+      NUXT_APP_SECRET: ${NUXT_APP_SECRET:-local-dev-secret-at-least-32-characters}
+      NUXT_APP_URL: ${NUXT_APP_URL:-http://localhost:3000}
+      NUXT_LLM_BASE_URL: ${NUXT_LLM_BASE_URL:-}
+      NUXT_LLM_MODEL: ${NUXT_LLM_MODEL:-}
+      NUXT_LLM_API_KEY: ${NUXT_LLM_API_KEY:-}
+      NUXT_RESEND_API_KEY: ${NUXT_RESEND_API_KEY:-}
+      NUXT_MAIL_FROM: ${NUXT_MAIL_FROM:-}
+      # 菜品图上传目录：必须落在卷上，容器重建后图片才不会丢
+      UPLOAD_DIR: /app/.data/uploads
+    volumes:
+      - uploads:/app/.data/uploads
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'node -e "fetch(\"http://127.0.0.1:3000/api/health\").then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"',
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  pgdata:
+  uploads:

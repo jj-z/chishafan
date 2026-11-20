@@ -1,0 +1,58 @@
+// 用户与权限。密码只存 nuxt-auth-utils 的 hashPassword 结果（AUTH-01）。
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id           String    @id @default(cuid())
+  // 登录凭证用邮箱：username 做唯一校验会重名、无法找回密码，见 AUTH-04。
+  email        String    @unique
+  // 手机号可选；填了也要求唯一。PostgreSQL 允许多行 NULL，所以可选唯一是安全的。
+  phone        String?   @unique
+  // 昵称只是展示用，允许为空、允许重复，不承担登录与唯一校验。
+  nickname     String?
+  passwordHash String
+  role         Role      @default(USER)
+  // 会话版本（AUTH-12）：登录/注册写进 session，受保护接口比对数据库值。
+  // 改密与注销时自增，使其他设备已签发的会话立即失效，不必等 7 天过期。
+  sessionVersion Int     @default(0)
+  // 找回密码 token（AUTH-14）：只存 SHA-256 哈希，明文只出现在重置链接里；
+  // 15 分钟过期、单次有效，每次申请覆盖旧值，重置成功后清空。
+  resetTokenHash     String?
+  resetTokenExpiresAt DateTime?
+  // 邮箱换绑（AUTH-15）：先在 pendingEmail 暂存新邮箱并发确认邮件，
+  // 点击确认后才写入 email。确认前 email 仍是原邮箱，登录不受影响。
+  // token 同样只存 SHA-256 哈希，30 分钟过期、单次有效，确认后清空这三个字段。
+  pendingEmail           String?
+  pendingEmailTokenHash  String?
+  pendingEmailExpiresAt  DateTime?
+  // 手机号换绑（AUTH-16）：与邮箱同理，先在 pendingPhone 暂存新号码并发短信验证码，
+  // 验证码正确后才写入 phone。手机号也是登录凭证，确认前原号码继续可登录。
+  // pendingPhoneAttempts 记录当前验证码输错次数，达到上限即作废，防止穷举 6 位数字。
+  pendingPhone           String?
+  pendingPhoneCodeHash   String?
+  pendingPhoneExpiresAt  DateTime?
+  pendingPhoneAttempts   Int       @default(0)
+  // 软删除标记（DATA-01）：非空即视为已删除，所有查询默认过滤 deletedAt: null。
+  deletedAt    DateTime?
+  // 账号禁用（AUTH-17）：非空表示被管理员禁用，登录返回 403、受保护接口 403，
+  // 与注销（deletedAt）不同，禁用可随时撤销，收藏/历史等数据全部保留。
+  disabledAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  favorites Favorite[]
+  histories DiningHistory[]
+  // 「不感兴趣」反馈（PREF-11），随用户注销级联删除。
+  feedbacks DishFeedback[]
+  // 推荐效果埋点（P2-09）；软删除用户不影响，物理删除时才级联。
+  recommendEvents RecommendEvent[]
+  // 后台操作审计（P2-11 / P2-13）：只保留「管理员执行了什么」这一条关系，
+  // 被操作目标可能是菜品/分类，因此不再反向关联（见 admin.prisma 的说明）。
+  adminAuditLogs AdminAuditLog[] @relation("AdminAuditLogs")
+  // 口味偏好可选：没有记录时按默认值（不忌口、无偏好）处理。
+  preference UserPreference?
+
+  @@map("users")
+}

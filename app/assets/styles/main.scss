@@ -1,0 +1,435 @@
+// 全局样式入口：由 nuxt.config.ts 的 css 字段引入，组件内禁止再次 import。
+// 设计令牌使用 CSS 自定义属性放在 :root，组件里直接写 var(--app-xxx)，
+// 这样不需要在每个 <style lang="scss"> 里 @use 变量文件，也就不会出现路径解析问题。
+//
+// 配色来自 docs 里那一组「参考风格版」设计稿的实测值，整体是一套暖色纸张/餐桌语言：
+// 米黄纸面（背景）+ 奶油卡片（承载内容）+ 橙红（品牌强调）+ 棕绿红（标签语义色）。
+// 所有页面共用这里的令牌，改一处就能全局生效，避免每页各调一套色。
+
+:root {
+  // ---- 品牌与语义色 ----
+  --app-color-primary: #e4681f; // 主行动：橙色，用于主按钮/选中态
+  --app-color-primary-deep: #c64710; // 主色的深一档，用于文字链接、渐变收尾
+  --app-color-danger: #b93a20; // 否定/删除（不感兴趣、退出）
+  --app-color-success: #3e7d3e; // 确认（就吃它）
+  --app-color-info: #2f6fa8; // 菜系类标签的蓝
+
+  // ---- 纸张与文字 ----
+  // 背景不是纯色：真实纸张/桌面有明暗和颗粒，纯色会让整页显得像廉价的塑料。
+  --app-color-bg: #efdfc4;
+  --app-color-bg-deep: #e3cca8; // 页面上下边缘的暗角
+  --app-color-wood: #6b3a1e; // 「我的」这类需要皮革质感的区块
+  --app-color-surface: #f8eedb; // 奶油卡片
+  --app-color-surface-strong: #fff7e8; // 卡片内需要再提亮一层的区块（输入框、列表行）
+  --app-color-line: #e2cba8; // 卡片描边与分割线
+  --app-color-text: #33200f;
+  --app-color-text-secondary: #8b6a47;
+  --app-color-text-muted: #a98b69;
+
+  // ---- 尺寸与质感 ----
+  --app-radius: 16px; // 卡片圆角
+  --app-radius-sm: 10px; // 内嵌小块（标签、小按钮）
+  --app-radius-pill: 999px; // 胶囊（按钮、输入框、筛选条）
+  --app-gap: 12px;
+  --app-shadow-card: 0 6px 18px rgb(90 55 25 / 10%);
+  // 卡片内侧上沿的 1px 高光：让奶油卡片有纸张厚度，不是一块贴纸
+  --app-shadow-inner: inset 0 1px 0 rgb(255 255 255 / 65%);
+
+  // 标题用衬线体：设计稿里的标题是粗宋，衬线比黑体更有“食谱/纸张”的年代感
+  --app-font-display:
+    'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', 'STSong', 'SimSun', serif;
+
+  --app-color-media: #e7d5b8; // 图片未加载时的占位底色
+}
+
+// 暗夜模式：<html> 上的 dark 类由 app.vue 根据 useThemeMode 的 isDark 切换。
+// 这里只覆盖全局变量；Vant 组件的深色由 van-config-provider theme=dark 处理。
+// 暗夜不是把亮色调成灰，而是换成深棕底 + 做旧纸卡片，保持同一套暖色气质。
+html.dark {
+  --app-color-primary: #f2803c;
+  --app-color-primary-deep: #d9662a;
+  --app-color-danger: #d8543a;
+  --app-color-success: #6aa96a;
+
+  --app-color-bg: #17100a;
+  --app-color-bg-deep: #0d0805;
+  --app-color-wood: #3a2415;
+  --app-color-surface: #2a1d12;
+  --app-color-surface-strong: #352616;
+  --app-color-line: #4a3420;
+  --app-color-text: #f3e3ca;
+  --app-color-text-secondary: #b79a78;
+  --app-color-text-muted: #8d7358;
+
+  --app-shadow-card: 0 6px 18px rgb(0 0 0 / 45%);
+  --app-shadow-inner: inset 0 1px 0 rgb(255 255 255 / 6%);
+  --app-color-media: #2f2216;
+}
+
+// 纸张颗粒：feTurbulence 是 SVG 的噪点滤镜，生成无规律的细颗粒，比重复的点阵贴图更像真纸。
+// 只给很低的透明度并叠加在底色之上，肉眼几乎察觉不到，但能消掉大面积纯色的塑料感。
+$app-paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+
+// 暗夜模式单独一份更淡的颗粒：同一张噪点图叠在近黑底上会被「提亮成灰雾」，
+// 深色下只需要一点点纹理暗示，不能沿用浅色那档不透明度。
+$app-paper-grain-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+
+// box-sizing 统一为 border-box，避免设置 padding 后容器宽度溢出。
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#__nuxt {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+// 全局滚动条美化：细、浅、圆润，和纸张底色融为一体而不是突兀的系统灰色条。
+// 只在 Chromium/WebKit 生效；Firefox 下方用 scrollbar-width/color 兜底。
+* {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  // 颜色取品牌色的浅一档：橙色在纸上太跳，浅一点才是「工具而不是装饰」
+  &::-webkit-scrollbar-thumb {
+    background: rgb(228 104 31 / 28%);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgb(228 104 31 / 48%);
+  }
+
+  // 表格内部的小滚动条（用户端菜单项、后台审计表格）更细一档，不撑坏容器视觉
+  &.el-table__body-wrapper::-webkit-scrollbar,
+  &.van-list__content::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+}
+
+// Firefox 兜底：thin = 类似 8px，scrollbar-color 「滑块 轨道」，轨道透明让纸底透出来
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(228 104 31 / 28%) transparent;
+}
+
+body {
+  background: var(--app-color-bg);
+  color: var(--app-color-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+// 用户端外壳：底色 + 颗粒 + 边缘暗角一层画完。
+// 用 background 多重叠加而不是再插一个绝对定位的 div：少一个节点、也不用处理层级和点击穿透。
+// 管理端（.admin-shell）沿用同一层底色：否则内容区是纸色、侧栏与顶栏却是纯白，
+// 整页像两套没合并的设计。
+.app-shell,
+.admin-shell {
+  position: relative;
+  // 必须用视口单位而不是 100%：Nuxt 会在 #__nuxt 与布局之间插一层高度为 auto 的容器，
+  // 百分比 min-height 遇到 auto 父级会退化成内容高度，短页面下方就会露出没有纸纹的 body 底色。
+  // dvh 让移动端地址栏收起时仍能铺满，不支持的浏览器回退到上面的 vh。
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: var(--app-color-bg);
+  background-image:
+    $app-paper-grain,
+    radial-gradient(120% 70% at 50% 0%, rgb(255 249 236 / 55%) 0%, rgb(255 249 236 / 0%) 55%),
+    radial-gradient(150% 90% at 50% 100%, var(--app-color-bg-deep) 0%, rgb(255 255 255 / 0%) 60%);
+  background-repeat: repeat, no-repeat, no-repeat;
+}
+
+html.dark .app-shell,
+html.dark .admin-shell {
+  background-image:
+    $app-paper-grain-dark,
+    radial-gradient(120% 70% at 50% 0%, rgb(255 210 160 / 10%) 0%, rgb(255 210 160 / 0%) 55%),
+    radial-gradient(150% 90% at 50% 100%, var(--app-color-bg-deep) 0%, rgb(0 0 0 / 0%) 60%);
+}
+
+// ---- 通用块：页面标题 ----
+// 菜品库、收藏、反馈等列表页共用，避免每页各写一份 scoped 样式。
+.page-header {
+  margin-bottom: 12px;
+
+  &__title {
+    margin: 0;
+    font-family: var(--app-font-display);
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+    color: var(--app-color-text);
+  }
+
+  &__subtitle {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: var(--app-color-text-secondary);
+  }
+}
+
+// ---- 通用块：奶油卡片 ----
+// 用法：<div class="app-card">…</div>
+.app-card {
+  background: var(--app-color-surface);
+  border: 1px solid var(--app-color-line);
+  border-radius: var(--app-radius);
+  box-shadow: var(--app-shadow-card), var(--app-shadow-inner);
+}
+
+// ---- 通用块：标签（色描边 + 淡底）----
+// 设计稿里标签是「细描边 + 同色淡底」，比 Vant 的实心 tag 更轻，不会在卡片里抢标题。
+.app-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--app-color-text-secondary);
+  // 用 surface-strong 混合而不是写死米白：暗夜模式下同一行代码会自动变成深棕半透明，
+  // 不会在深色页面上冒出一块亮色标签。
+  background: color-mix(in srgb, var(--app-color-surface-strong) 55%, transparent);
+  border: 1px solid var(--app-color-line);
+  border-radius: 4px;
+
+  &--info {
+    color: var(--app-color-info);
+    border-color: color-mix(in srgb, var(--app-color-info) 45%, transparent);
+  }
+
+  &--success {
+    color: var(--app-color-success);
+    border-color: color-mix(in srgb, var(--app-color-success) 45%, transparent);
+  }
+
+  &--danger {
+    color: var(--app-color-danger);
+    border-color: color-mix(in srgb, var(--app-color-danger) 45%, transparent);
+  }
+
+  &--primary {
+    color: var(--app-color-primary-deep);
+    border-color: color-mix(in srgb, var(--app-color-primary) 45%, transparent);
+  }
+}
+
+// ---- Vant 通用改造 ----
+// 用户端只有 Vant，这里统一改掉它的默认冷色调，页面里就不用逐个写 :deep。
+// 用 `body .van-xxx` 提高一级权重压过 Vant 自带样式（同权重时 Vant 后注入会赢）。
+
+// 顶部导航：默认白底改奶油纸底 + 衬线标题
+body .van-nav-bar {
+  background: var(--app-color-surface);
+  border-bottom: 1px solid var(--app-color-line);
+
+  .van-nav-bar__title {
+    font-family: var(--app-font-display);
+    font-weight: 700;
+    color: var(--app-color-text);
+  }
+
+  .van-nav-bar__text,
+  .van-icon {
+    color: var(--app-color-primary-deep);
+  }
+}
+
+// 二级页（历史 / 口味偏好 / 聊天 / 详情）的顶部导航在滚动时固定在视口顶部，
+// 否则长列表往下翻后返回入口会滚出屏幕，用户得一路划回顶部。
+// 用 sticky 而不是 fixed：sticky 留在文档流里，不用给内容额外补 padding 也不会遮挡首屏。
+body .van-nav-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+// 底部导航：奶油底 + 橙色选中
+body .van-tabbar {
+  // Vant 选中项默认用 --van-tabbar-item-active-background 铺一块纯白底，
+  // 在纸色导航条上像一个突兀的白补丁；改成透明，只靠橙色图标/文字表达选中。
+  --van-tabbar-item-active-background: transparent;
+
+  background: var(--app-color-surface);
+  border-top: 1px solid var(--app-color-line);
+}
+
+// 图片占位：Vant 默认用浅灰蓝（#f7f8fa）铺满无图/加载中的区域，
+// 在纸色页面上像一块坏掉的空白。改成纸色底 + 棕色文字，让「暂无图片」看起来是设计的一部分。
+// 这组变量定义在 .van-image 上，内部的 __error / __loading 会继承。
+body .van-image {
+  --van-image-placeholder-background: var(--app-color-media);
+  --van-image-placeholder-text-color: var(--app-color-text-muted);
+  --van-image-loading-icon-color: var(--app-color-text-muted);
+  --van-image-error-icon-color: var(--app-color-text-muted);
+}
+
+// ---- 通用按钮 ----
+// 设计稿里按钮全是胶囊，且用「实心橙 / 橙描边 / 红描边 / 绿描边」区分主次与语义。
+// 直接给 van-button 加这些类，而不是换成原生 button：保留 loading、disabled、native-type 等行为。
+// 用 body 前缀提权重压过 Vant 的 .van-button 默认背景/边框。
+body .app-btn {
+  height: 46px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border: 1px solid transparent;
+  border-radius: var(--app-radius-pill);
+
+  // 实心：主行动（换一个 / 发送），用竖向渐变避免大色块显得扁平
+  &--solid {
+    color: #fff8ec;
+    background: linear-gradient(180deg, #f5821f 0%, #e4610f 55%, #d6540a 100%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 30%),
+      0 6px 14px rgb(200 90 20 / 28%);
+  }
+
+  &--outline-primary {
+    color: var(--app-color-primary-deep);
+    background: color-mix(in srgb, var(--app-color-surface-strong) 55%, transparent);
+    border-color: rgb(228 104 31 / 55%);
+  }
+
+  &--outline-danger {
+    color: var(--app-color-danger);
+    background: color-mix(in srgb, var(--app-color-surface-strong) 45%, transparent);
+    border-color: rgb(185 58 32 / 45%);
+  }
+
+  &--outline-success {
+    color: var(--app-color-success);
+    background: color-mix(in srgb, var(--app-color-surface-strong) 45%, transparent);
+    border-color: rgb(62 125 62 / 45%);
+  }
+
+  &--outline-neutral {
+    color: var(--app-color-text-secondary);
+    background: color-mix(in srgb, var(--app-color-surface-strong) 45%, transparent);
+    border-color: var(--app-color-line);
+  }
+
+  // Vant 默认给 disabled 加了 opacity 并改背景，这里统一成“褪色”而不是变成灰块
+  &.van-button--disabled {
+    opacity: 0.45;
+  }
+}
+
+// ---- 认证页（登录 / 注册 / 找回 / 重置 / 验证邮箱）----
+// 这几个页面共用一套表单样式，写在这里而不是每页复制一份 scoped 样式。
+// 结构约定：.auth-field 包一个 van-field，就是一颗奶油胶囊；.auth-submit 是深红主按钮。
+.auth-field {
+  & + & {
+    margin-top: 16px;
+  }
+
+  // Vant 的 van-cell 默认是白底 + 底部 1px 分隔线，这里改造成半透明奶油胶囊：
+  // 半透明是为了让底下的纸纹透上来，胶囊才像“印”在纸上而不是贴上去的。
+  .van-cell {
+    height: 46px;
+    padding: 0 22px;
+    align-items: center;
+    overflow: visible;
+    background: rgb(255 246 229 / 62%);
+    border: 1px solid rgb(201 163 118 / 55%);
+    border-radius: var(--app-radius-pill);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 75%),
+      inset 0 -1px 0 rgb(176 136 96 / 12%),
+      0 2px 10px rgb(120 80 40 / 7%);
+  }
+
+  // 去掉 Vant 用 ::after 画的 1px 分隔线
+  .van-cell::after {
+    display: none;
+  }
+
+  .van-field__label {
+    // 6em 是设计稿里「邮箱 / 手机号」这一列的宽度：让多行表单的输入值起始位置对齐
+    width: 6em;
+    margin-inline-end: 12px;
+    color: var(--app-color-text);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .van-field__control {
+    color: var(--app-color-text);
+    font-size: 14px;
+    letter-spacing: 0.01em;
+  }
+
+  .van-field__control::placeholder {
+    color: var(--app-color-text-muted);
+  }
+
+  // 密码框的圆点刻意加大间距，避免一串点糊成一团
+  .van-field__control[type='password'] {
+    letter-spacing: 0.25em;
+  }
+
+  // 校验失败时 Vant 会把输入框下面的错误文案顶出来，胶囊高度是写死的，需要放一个允许换行的容器
+  .van-field__error-message {
+    padding-left: 6px;
+    font-size: 12px;
+  }
+}
+
+// 认证页主按钮：深红竖向渐变 + 内阴影收边。
+// 前缀 .auth-submit-holder 用来压过 Vant 的 .van-button 默认背景（同为单类时先后顺序不可靠）。
+.auth-submit-holder {
+  margin-top: 24px;
+
+  .van-button {
+    height: clamp(46px, 10vw, 54px);
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    color: #fff3e6;
+    background: linear-gradient(180deg, #ab3c2b 0%, #9d3325 46%, #8a2317 100%);
+    border: none;
+    border-radius: var(--app-radius-pill);
+    box-shadow:
+      inset 0 1px 0 rgb(255 190 165 / 35%),
+      inset 0 -3px 8px rgb(60 0 0 / 32%),
+      0 10px 20px rgb(120 40 20 / 26%);
+  }
+}
+
+// 认证页底部的切换链接（去注册 / 返回登录 / 忘记密码）
+.auth-switch {
+  margin: 20px 0 0;
+  font-size: 13px;
+  color: var(--app-color-text-muted);
+  text-align: center;
+
+  a {
+    font-weight: 600;
+    color: var(--app-color-primary-deep);
+    text-decoration: none;
+  }
+
+  // 辅助入口（忘记密码）视觉上更弱一档
+  &--minor {
+    margin-top: 10px;
+    font-size: 12px;
+
+    a {
+      font-weight: 400;
+      color: #b0805a;
+    }
+  }
+}

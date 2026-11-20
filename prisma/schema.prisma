@@ -1,0 +1,15 @@
+// Prisma 全局声明：generator 与 datasource 只能各出现一次，固定放在 prisma/ 根目录。
+// 业务模型全部写在 prisma/models/ 下；prisma.config.ts 的 schema 指向 prisma/（递归扫描），
+// 因此根目录的本文件与 models/ 里的模型会被合并成同一个 schema。
+
+generator client {
+  provider     = "prisma-client"
+  // 路径相对本文件所在目录（prisma/），../ 回到项目根后再进 shared。
+  output       = "../shared/generated/prisma"
+  // Nuxt 服务端产物是 ESM，显式声明避免生成 CJS 的 require 语法。
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}

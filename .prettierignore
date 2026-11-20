@@ -1,0 +1,18 @@
+
+# 生成物与第三方目录不参与格式化
+.nuxt
+.output
+.nitro
+.data
+.cache
+.screenshots
+node_modules
+public
+prisma/generated
+shared/generated
+package-lock.json
+skills-lock.json
+
+# Markdown 文档保持手写排版
+docs
+*.md

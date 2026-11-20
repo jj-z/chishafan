@@ -1,0 +1,95 @@
+// 分类与菜品。菜品必须归属唯一分类（DISH-01）。
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  sortOrder Int       @default(0)
+  // 软删除（DATA-01）：菜系可能被菜品引用，不能物理删除。
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  dishes Dish[]
+
+  @@map("categories")
+}
+
+// 餐别：随机推荐按此字段筛选（DISH-06）。ANY 表示早中晚都能吃。
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  ANY
+}
+
+// 推荐的最小单位是「一餐」（MEAL-01）：
+// SINGLE = 单品即一餐（粉/面/饭/套餐）；DISH = 需要搭配主食的菜。
+enum ServingMode {
+  SINGLE
+  DISH
+}
+
+// 配菜在一餐里的角色，用于组合餐选菜（MEAL-04）。单品餐不用这个字段。
+enum DishRole {
+  MAIN
+  VEG
+  SOUP
+}
+
+// 受控过敏原/忌口标签：用于用户偏好硬过滤，不依赖自由文本 ingredients。
+// 新增取值需要同时更新 shared/types/dish.ts 的 ALLERGEN_CODES 与展示文案。
+enum Allergen {
+  PEANUT
+  TREE_NUT
+  SEAFOOD
+  FISH
+  BEEF
+  LAMB
+  PORK
+  POULTRY
+  EGG
+  DAIRY
+  GLUTEN
+  SOY
+  SESAME
+  ALCOHOL
+}
+
+model Dish {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  // 一期只存外链，不做文件上传（DISH-07）。
+  imageUrl    String?
+  mealType    MealType    @default(ANY)
+  servingMode ServingMode @default(DISH)
+  role        DishRole    @default(MAIN)
+  // 辣度 0-3、价格档位 1-3，用整数而不是字符串，便于后续做范围筛选。
+  spicyLevel  Int         @default(0)
+  priceLevel  Int         @default(1)
+  tags        String[]    @default([])
+  ingredients String[]    @default([])
+  // 受控过敏原：用户偏好里的忌口用它做硬过滤（PREF-02）。
+  allergens   Allergen[]  @default([])
+  steps       String?
+  isPublished Boolean     @default(true)
+  // 软删除（DATA-01）：下架走 isPublished，删除走 deletedAt，两者语义不同。
+  deletedAt   DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  favorites Favorite[]
+  histories DiningHistory[]
+  feedbacks DishFeedback[]
+  recommendEvents RecommendEvent[]
+
+  @@index([categoryId])
+  @@index([mealType])
+  // 用户端列表与随机推荐都固定带「未删除 + 已上架」两个条件（P2-20），
+  // 组合索引让这两条最高频查询不必回表筛选整张 dishes。
+  @@index([isPublished, deletedAt])
+  @@map("dishes")
+}

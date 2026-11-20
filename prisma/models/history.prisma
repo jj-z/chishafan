@@ -1,0 +1,18 @@
+// 就餐历史：用于随机推荐去重（DISH-05 / HIST-01~03）。
+model DiningHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  dishId    String
+  // 只存日期不存时间：@db.Date 让数据库列类型变成 date，
+  // 这样“同一天同一道菜”才能被下面的唯一索引精确拦重（HIST-02）。
+  eatenOn   DateTime @db.Date
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dish Dish @relation(fields: [dishId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dishId, eatenOn])
+  // 推荐接口按“用户 + 最近 N 天”查询，复合索引直接命中。
+  @@index([userId, eatenOn])
+  @@map("dining_histories")
+}

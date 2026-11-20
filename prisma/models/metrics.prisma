@@ -1,0 +1,30 @@
+// 运营观测数据（P2-12 数据看板）。
+// 这两张表只服务后台统计：只记录「发生了什么」，不存用户输入原文、模型输出或任何隐私内容。
+
+// 菜品搜索日志：只记录「搜了但没搜到」的词，用来发现菜品库缺口（SEARCH-04）。
+// 不在每次搜索都写库：正常搜索量大且没有分析价值，零结果才是运营需要补的素材。
+model SearchLog {
+  id          String   @id @default(cuid())
+  keyword     String
+  resultCount Int      @default(0)
+  // 看板按「时间段 + 是否零结果」聚合，单列 createdAt 用于范围过滤。
+  createdAt   DateTime @default(now())
+
+  @@index([resultCount, createdAt])
+  @@index([createdAt])
+  @@map("search_logs")
+}
+
+// AI 调用日志：把原本只打到 stdout 的 llm.recommend 指标落库，
+// 否则看板无法计算失败率与平均耗时（日志文件不适合做聚合查询）。
+model AiCallLog {
+  id         String   @id @default(cuid())
+  ok         Boolean
+  durationMs Int
+  // 失败原因（截断后的错误文本），成功时为空；不记录用户问题与模型回复。
+  error      String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt, ok])
+  @@map("ai_call_logs")
+}
