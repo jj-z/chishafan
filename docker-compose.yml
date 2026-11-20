@@ -56,6 +56,20 @@ services:
         condition: service_completed_successfully
     profiles: ['tools']
 
+  compress:
+    # 复用 migrator 镜像（含 devDependencies 里的 sharp / tsx），在容器内原地压缩历史菜品图。
+    # 用法：docker compose run --rm compress
+    #       docker compose run --rm compress npm run images:compress -- --dry-run
+    build:
+      context: .
+      target: migrator
+    command: ['npm', 'run', 'images:compress']
+    environment:
+      UPLOAD_DIR: /app/.data/uploads
+    volumes:
+      - uploads:/app/.data/uploads
+    profiles: ['tools']
+
   app:
     build:
       context: .

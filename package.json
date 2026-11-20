@@ -25,7 +25,8 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "db:embed": "tsx scripts/db-embed.ts",
-    "db:migrate-data": "tsx scripts/migrate-data.ts"
+    "db:migrate-data": "tsx scripts/migrate-data.ts",
+    "images:compress": "tsx scripts/compress-uploads.ts"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
@@ -53,6 +54,7 @@
     "prettier": "^3.9.10",
     "prisma": "^7.10.1",
     "sass-embedded": "^1.108.1",
+    "sharp": "^0.35.5",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "vitest": "^5.1.0",

@@ -67,6 +67,7 @@ npm run dev   # http://localhost:3000
 | `npm run db:generate` | 重新生成 Prisma Client |
 | `npm run db:migrate` | 开发环境创建迁移（`prisma migrate dev`） |
 | `npm run db:seed` | 幂等写入演示数据 |
+| `npm run images:compress` | 批量压缩历史上传菜品图（加 `-- --dry-run` 只预览不写盘） |
 
 ## 测试与 CI
 
@@ -82,7 +83,8 @@ npm run dev   # http://localhost:3000
 ```bash
 cp .env.example .env       # 修改 NUXT_APP_SECRET / 数据库密码 / LLM Key
 docker compose up -d --build
-docker compose run --rm seed   # 可选：首次写入演示数据
+docker compose run --rm seed       # 可选：首次写入演示数据
+docker compose run --rm compress   # 可选：压缩历史菜品图（可加 npm run images:compress -- --dry-run 预览）
 ```
 
 编排包含四个服务：`db`（PostgreSQL 16）、`migrate`（一次性执行 `prisma migrate deploy`）、`app`（Nitro 产物，非 root 用户运行）、`seed`（profile=tools，手动触发）。`app` 会等 `migrate` 成功后才启动，健康检查走 `GET /api/health`。

@@ -16,6 +16,7 @@ import type { AdminDish, AdminDishImportResult } from '#shared/schemas/admin'
 import type { DishRole, MealType, ServingMode } from '#shared/schemas/dish'
 import type { Allergen } from '#shared/types/dish'
 import { ALLERGEN_LABELS, PRICE_LABELS, SPICY_LABELS } from '#shared/utils/dish'
+import { compressImage } from '~/utils/compressImage'
 
 definePageMeta({ layout: 'admin' })
 
@@ -291,14 +292,25 @@ const form = ref<DishForm>(emptyForm())
 // 上传逻辑全部走 apiFetch，和项目其它接口保持一致（响应同样过 Zod 校验）。
 const fileInput = ref<HTMLInputElement | null>(null)
 const uploading = ref(false)
-/** 与服务端 MAX_IMAGE_BYTES 对齐：前端先挡一次，避免白传 5MB 再被 413 拒绝。 */
+/** 服务端硬上限：压缩后的文件必须不超过它，否则接口会返回 413。 */
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+/**
+ * 原图前置上限：手机直出照片常见 5–10MB，直接按 5MB 拦截会让管理员频繁换图。
+ * 先允许到 20MB，交给 compressImage 缩到几百 KB；20MB 只是为了挡住异常大文件，
+ * 避免浏览器解码时把页面内存撑爆。
+ */
+const MAX_SOURCE_BYTES = 20 * 1024 * 1024
+
+/** 上传成功提示里展示体积变化，让管理员直观看到压缩效果。 */
+function formatKb(bytes: number): string {
+  return `${Math.max(1, Math.round(bytes / 1024))}KB`
+}
 
 function pickImageFile() {
   fileInput.value?.click()
 }
 
-/** 选择文件后立刻上传，成功即把返回的站内路径写进表单（保存菜品时才落库）。 */
+/** 选择文件后先压缩再上传，成功即把返回的站内路径写进表单（保存菜品时才落库）。 */
 async function onImageSelected(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
@@ -310,21 +322,32 @@ async function onImageSelected(event: Event) {
     ElMessage.error('请选择图片文件')
     return
   }
-  if (file.size > MAX_IMAGE_BYTES) {
-    ElMessage.error('图片不能超过 5MB')
+  if (file.size > MAX_SOURCE_BYTES) {
+    ElMessage.error('原图不能超过 20MB')
     return
   }
 
   uploading.value = true
   try {
+    // 管理员多等一两秒，换来所有访客少下载几百 KB；失败时会自动回退原图。
+    const compressed = await compressImage(file)
+    if (compressed.file.size > MAX_IMAGE_BYTES) {
+      ElMessage.error('图片压缩后仍超过 5MB，请换一张')
+      return
+    }
+
     const body = new FormData()
-    body.append('file', file)
+    body.append('file', compressed.file)
     const data = await apiFetch('/api/admin/uploads', adminUploadResultSchema, {
       method: 'POST',
       body,
     })
     form.value.imageUrl = data.url
-    ElMessage.success('图片已上传')
+    ElMessage.success(
+      compressed.compressed
+        ? `图片已上传（${formatKb(compressed.originalBytes)} → ${formatKb(compressed.compressedBytes)}）`
+        : '图片已上传',
+    )
   } catch (err: unknown) {
     ElMessage.error(adminErrorMessage(err, '图片上传失败'))
   } finally {
@@ -692,7 +715,9 @@ onMounted(() => {
                 hidden
                 @change="onImageSelected"
               />
-              <span class="dish-image__hint">JPG / PNG / WebP，≤5MB；也可以直接粘贴外链</span>
+              <span class="dish-image__hint">
+                JPG / PNG / WebP，原图 ≤20MB；上传时自动压缩到长边 1600px，也可以直接粘贴外链
+              </span>
             </div>
             <el-input v-model="form.imageUrl" placeholder="上传后自动填入，或粘贴 https://…" />
           </div>

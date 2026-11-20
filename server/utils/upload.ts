@@ -1,8 +1,9 @@
 // server/utils/upload.ts
 // 菜品图片上传的公共约定：目录解析、类型白名单、魔数校验、文件落盘与旧文件清理。
 //
-// 为什么不引 multer / sharp / AWS SDK：当前只做「单张菜品图原样存档」，
-// node:fs + node:crypto 足够；新增原生依赖会让 Docker 构建变重，也不在本项目技术栈内。
+// 为什么不引 multer / sharp / AWS SDK：运行时只做「单张菜品图原样存档」，
+// node:fs + node:crypto 足够；sharp 仅作为 scripts/compress-uploads.ts 的开发依赖，
+// 不会进入 Docker runner 镜像（runner 只拷 .output）。
 //
 // 安全边界（上传接口是写磁盘的攻击面）：
 // - 只认文件头魔数，不信任扩展名与 Content-Type（两者都可伪造）；
