@@ -19,7 +19,8 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16-alpine
+        # 迁移里有 CREATE EXTENSION vector，官方 postgres 镜像不含该扩展，必须用 pgvector 镜像。
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_DB: chishafan
           POSTGRES_USER: postgres

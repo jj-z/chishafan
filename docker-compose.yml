@@ -16,6 +16,12 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    # 数据库日志同样做体积上限，异常时保留最近 3 个 10MB 文件足够排查。
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
     ports:
       # 只给本机 `npm run dev` 用；容器内的 app/migrate 仍走 db:5432。
       # 5433 已被其它项目占用，这里用 5434。
@@ -66,8 +72,26 @@ services:
       NUXT_LLM_API_KEY: ${NUXT_LLM_API_KEY:-}
       NUXT_RESEND_API_KEY: ${NUXT_RESEND_API_KEY:-}
       NUXT_MAIL_FROM: ${NUXT_MAIL_FROM:-}
+      # 以下可选变量必须显式透传：compose 只读宿主机 .env 做插值，不会自动塞进容器。
+      # 默认值写成空串是安全的——代码里空值会回落到内置默认值（见 quotaMath / rateLimit / knowledge）。
+      NUXT_EMBEDDING_BASE_URL: ${NUXT_EMBEDDING_BASE_URL:-}
+      NUXT_EMBEDDING_MODEL: ${NUXT_EMBEDDING_MODEL:-}
+      NUXT_EMBEDDING_API_KEY: ${NUXT_EMBEDDING_API_KEY:-}
+      NUXT_EMBEDDING_DIMENSIONS: ${NUXT_EMBEDDING_DIMENSIONS:-}
+      NUXT_RAG_THRESHOLD: ${NUXT_RAG_THRESHOLD:-}
+      NUXT_AI_DAILY_QUOTA_USER: ${NUXT_AI_DAILY_QUOTA_USER:-}
+      NUXT_AI_DAILY_QUOTA_GUEST: ${NUXT_AI_DAILY_QUOTA_GUEST:-}
+      NUXT_AI_DAILY_TOKEN_USER: ${NUXT_AI_DAILY_TOKEN_USER:-}
+      NUXT_AI_DAILY_TOKEN_GUEST: ${NUXT_AI_DAILY_TOKEN_GUEST:-}
+      HISTORY_DAYS: ${HISTORY_DAYS:-}
       # 菜品图上传目录：必须落在卷上，容器重建后图片才不会丢
       UPLOAD_DIR: /app/.data/uploads
+    # 限制单个容器的日志体积，避免长期运行后 json 日志把磁盘写满。
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
     volumes:
       - uploads:/app/.data/uploads
     depends_on:

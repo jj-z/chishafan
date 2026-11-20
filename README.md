@@ -41,7 +41,7 @@ npm run dev   # http://localhost:3000
 | `NUXT_APP_URL` | 邮件功能必填 | 站点根地址，用于拼接找回密码/邮箱换绑链接 |
 | `NUXT_RESEND_API_KEY` | 邮件功能必填 | Resend HTTP API Key（AUTH-14/15） |
 | `NUXT_MAIL_FROM` | 邮件功能必填 | 发件人，如 `吃啥饭 <no-reply@example.com>` |
-| `NUXT_LLM_BASE_URL` | AI 功能必填 | OpenAI 兼容端点，如 `https://open.bigmodel.cn/api/paas/v4` |
+| `NUXT_LLM_BASE_URL` | AI 功能必填 | 完整的 OpenAI 兼容端点，如 `https://open.bigmodel.cn/api/paas/v4/chat/completions` |
 | `NUXT_LLM_MODEL` | AI 功能必填 | 模型名，如 `glm-4-flash` |
 | `NUXT_LLM_API_KEY` | AI 功能必填 | 供应商 API Key |
 | `NUXT_AI_DAILY_QUOTA_USER` | 否 | 登录用户 AI 每日次数，默认 30（REC-07） |
@@ -123,11 +123,27 @@ node .output/server/index.mjs   # 默认 3000 端口，可用 PORT / HOST 覆盖
 生产库建议每日全量备份，并至少保留 7 天。仓库提供两个脚本（需在 Linux / WSL / Git Bash 下运行）：
 
 ```bash
-# 备份到 ./backups，自动保留最近 7 天并生成 sha256 校验文件
+# Docker Compose 部署：宿主机不用装 PostgreSQL 客户端，脚本会自动通过 db 容器导出
+./scripts/backup-db.sh
+
+# 非 Docker 环境：本机装了 pg_dump / pg_restore 时读 DATABASE_URL
 DATABASE_URL='postgresql://...' ./scripts/backup-db.sh
 
 # 恢复（必须显式确认；执行前先停止写入）
-CONFIRM_RESTORE=yes DATABASE_URL='postgresql://...' ./scripts/restore-db.sh backups/chishafan-2026-01-01-030000.dump
+CONFIRM_RESTORE=yes ./scripts/restore-db.sh backups/chishafan-2026-01-01-030000.dump
+```
+
+每日自动备份（crontab，Docker 部署）：
+
+```cron
+0 3 * * * cd /opt/chishafan && ./scripts/backup-db.sh >> ./backups/backup.log 2>&1
+```
+
+图片上传目录在具名卷里，建议一并备份（卷名可用 `docker volume ls` 确认）：
+
+```bash
+docker run --rm -v chishafan_uploads:/data -v /opt/chishafan/backups:/backup alpine \
+  tar czf /backup/uploads-$(date +%F).tgz -C /data .
 ```
 
 等价的手工命令：
